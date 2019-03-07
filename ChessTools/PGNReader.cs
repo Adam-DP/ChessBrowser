@@ -32,13 +32,10 @@ namespace ChessTools
                     
                 }
 
-                string moves = "";
+                string moves = "[Match \"";
                 idx++;
-                while (lines[idx] != "")
-                {
-                    moves += lines[idx++];
-
-                }
+                while (lines[idx] != "") { moves += lines[idx++]; }
+                moves += "\"]";
                 gameRepresentation.Add(moves);
 
                 // Create game and add it to the array

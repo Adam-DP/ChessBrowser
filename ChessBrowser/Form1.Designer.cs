@@ -1,4 +1,5 @@
-﻿using MySql.Data.MySqlClient;
+﻿using ChessTools;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
@@ -29,12 +30,12 @@ namespace ChessBrowser
       // assuimg you've typed a user and password in the GUI
       string connection = GetConnectionString();
 
-      // TODO: Load and parse the PGN file
-      //       We recommend creating separate libraries to represent chess data and load the file
-
+            // TODO: Load and parse the PGN file
+            //       We recommend creating separate libraries to represent chess data and load the file
+            List<ChessGame> games = PGNReader.chessFileToChessGame(PGNfilename);
       // Use this to tell the GUI's progress bar how many total work steps there are
       // For example, one iteration of your main upload loop could be one work step
-      // SetNumWorkItems(...);
+      SetNumWorkItems(games.Count);
 
 
       using (MySqlConnection conn = new MySqlConnection(connection))
@@ -44,12 +45,37 @@ namespace ChessBrowser
           // Open a connection
           conn.Open();
 
-          // TODO: iterate through your data and generate appropriate insert commands
+          foreach (ChessGame g in games)
+                    {
+                        g.InsertEventTable(conn);
+                        g.InsertBothPlayers(conn);
+                        try
+                        {
+                        }
+                        catch (Exception e) { }
+                        try
+                        {
 
-          // Use this to tell the GUI that one work step has completed:
-          // WorkStepCompleted();
+                        }
+                        catch (Exception e) { }
+                        try
+                        {
+                        g.InsertGame(conn);
 
-        }
+                        }
+                        catch (Exception e) { }
+                        // TODO: query the database to get the event eID
+                        // TODO: query database for white pID
+                        // TODO: query database for black pID
+
+                        // TODO: Insert into Events
+                        WorkStepCompleted();
+
+                    }
+
+                    // Use this to tell the GUI that one work step has completed:
+
+                }
         catch (Exception e)
         {
           Console.WriteLine(e.Message);
@@ -97,6 +123,8 @@ namespace ChessBrowser
           //       then parse the results into an appropriate string
           //       and return it.
           //       Remember that the returned string must use \r\n newlines
+
+
         }
         catch (Exception e)
         {
