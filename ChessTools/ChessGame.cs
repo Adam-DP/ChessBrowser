@@ -76,42 +76,96 @@ namespace ChessTools
 
         public void InsertGame(MySqlConnection conn)
         {
-            // throw new NotImplementedException();
+            // Get Black's pID
+            string black_pID = GetpIDFromDatabase(this.accessData("Black"), conn);
+
+            // Get White's pID
+            string white_pID = GetpIDFromDatabase(this.accessData("White"), conn);
+
+            // Get the event's eID
+            string eventID = GeteIDFromDatabase(this.accessData("Event"), conn);
+
+            // Add it in
+            {
+                MySqlCommand command = conn.CreateCommand();
+                command.CommandText = "INSERT INTO Games (Result, Moves, WhitePlayer, BlackPlayer, eID) " +
+                "VALUES(@Result, @Match, @White, @Black, @Event)";
+                command.Parameters.AddWithValue("@Result", this.accessData("Result"));
+                command.Parameters.AddWithValue("@Match", this.accessData("Match"));
+                command.Parameters.AddWithValue("@White", white_pID);
+                command.Parameters.AddWithValue("@Black", black_pID);
+                command.Parameters.AddWithValue("@Event", eventID);
+                
+                command.ExecuteNonQuery();
+            }
+
+
         }
 
-        private int PlayerHasElo(string player_name)
+        private string GeteIDFromDatabase(string eventName, MySqlConnection conn)
         {
+            MySqlCommand command = conn.CreateCommand();
+            command.CommandText = "SELECT eID from Events where Name = @Name";
+            command.Parameters.AddWithValue("@Name", eventName);
+            string eID = "";
 
+            using (MySqlDataReader reader = command.ExecuteReader())
+                eID = (reader.Read()) ? reader["eID"].ToString() : "";
+            
+            return eID;
+        }
 
-            return -1;
+        private string GetpIDFromDatabase(string playerName, MySqlConnection conn)
+        {
+            MySqlCommand command = conn.CreateCommand();
+            command.CommandText = "SELECT pID from Players where Name = @Name";
+            command.Parameters.AddWithValue("@Name", playerName);
+            string pID = "";
+
+            using (MySqlDataReader reader = command.ExecuteReader())
+                pID = (reader.Read()) ? reader["pID"].ToString() : "";
+            
+            return pID;
+        }
+
+        private int PlayerHasElo(string player_name, MySqlConnection conn)
+        {
+            MySqlCommand command = conn.CreateCommand();
+            command.CommandText = "SELECT Elo from Players where Name = @Name";
+            command.Parameters.AddWithValue("@Name", player_name);
+            string elo = "-1";
+
+            using (MySqlDataReader reader = command.ExecuteReader())
+                elo = (reader.Read()) ? reader["Elo"].ToString() : "-1";
+
+            return Int32.Parse(elo);
         }
 
         public void InsertBothPlayers(MySqlConnection conn)
         {
             {
-                int previousElo = PlayerHasElo(this.accessData("White"));
-                string insertOrReplace = (previousElo == -1) ? "REPLACE" : "INSERT IGNORE";
+                int previousElo = PlayerHasElo(this.accessData("White"), conn);
+                string insertOrReplace = (previousElo == -1) ? "REPLACE" : "INSERT IGNORE INTO";
 
                 if (previousElo >= Int32.Parse(this.accessData("WhiteElo"))) return;
 
                 MySqlCommand command = conn.CreateCommand();
-                command.CommandText = insertOrReplace + " INTO Players (Name, Elo) " +
-                "VALUES(@Name, @Elo) ON DUPLICATE KEY UPDATE Elo = GREATEST(VALUES(Elo), Elo)";
+                command.CommandText = insertOrReplace + " Players (Name, Elo) " +
+                "VALUES(@Name, @Elo)"; // ON DUPLICATE KEY UPDATE Elo = GREATEST(VALUES(Elo), Elo)";
                 command.Parameters.AddWithValue("@Name", this.accessData("White"));
                 command.Parameters.AddWithValue("@Elo", this.accessData("WhiteElo"));
                 command.ExecuteNonQuery();
             }
 
             {
-                int previousElo = PlayerHasElo(this.accessData("Black"));
-                string insertOrReplace = (previousElo == -1) ? "REPLACE" : "INSERT IGNORE";
+                int previousElo = PlayerHasElo(this.accessData("Black"), conn);
+                string insertOrReplace = (previousElo == -1) ? "REPLACE" : "INSERT IGNORE INTO";
 
                 if (previousElo >= Int32.Parse(this.accessData("BlackElo"))) return;
 
                 MySqlCommand command = conn.CreateCommand();
-                command.CommandText = "INSERT IGNORE INTO Players " +
-                "(Name, Elo) " +
-                "VALUES(@Name, @Elo) ON DUPLICATE KEY UPDATE Elo = GREATEST(VALUES(Elo), Elo)";
+                command.CommandText = insertOrReplace + " Players (Name, Elo) " +
+                "VALUES(@Name, @Elo)"; // ON DUPLICATE KEY UPDATE Elo = GREATEST(VALUES(Elo), Elo)";
                 command.Parameters.AddWithValue("@Name", this.accessData("Black"));
                 command.Parameters.AddWithValue("@Elo", this.accessData("BlackElo"));
                 command.ExecuteNonQuery();

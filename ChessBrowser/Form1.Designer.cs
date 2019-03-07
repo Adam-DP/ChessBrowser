@@ -49,26 +49,14 @@ namespace ChessBrowser
                     {
                         g.InsertEventTable(conn);
                         g.InsertBothPlayers(conn);
-                        try
-                        {
-                        }
-                        catch (Exception e) { }
-                        try
-                        {
-
-                        }
-                        catch (Exception e) { }
+                        
                         try
                         {
                         g.InsertGame(conn);
 
                         }
-                        catch (Exception e) { }
-                        // TODO: query the database to get the event eID
-                        // TODO: query database for white pID
-                        // TODO: query database for black pID
+                        catch (Exception e) { Console.WriteLine(e.ToString()); }
 
-                        // TODO: Insert into Events
                         WorkStepCompleted();
 
                     }
